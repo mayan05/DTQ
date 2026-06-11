@@ -1,0 +1,5 @@
+fastapi[standard]==0.136.3
+celery[redis]==5.6.3
+flower==2.0.1
+pydantic>=2.7.0,<3.0.0
+uvicorn[standard]>=0.30.0
