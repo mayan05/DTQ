@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flower
+  template:
+    metadata:
+      labels:
+        app: flower
+    spec:
+      containers:
+      - name: flower
+        image: mayan05/dtq-app:latest
+        imagePullPolicy: Always
+        command: ["celery", "-A", "app.worker", "flower", "--port=5555"]
+        ports:
+        - containerPort: 5555
+        envFrom:
+        - configMapRef:
+            name: dtq-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flower
+spec:
+  type: LoadBalancer
+  selector:
+    app: flower
+  ports:
+    - protocol: TCP
+      port: 5555
+      targetPort: 5555

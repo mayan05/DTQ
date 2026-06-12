@@ -77,6 +77,39 @@ The Flower dashboard shows me the status and history of the workers, tasks and b
 
 In this project extension, priority routing improves the system because it gives attention to the high-priority tasks that needs to be solved soon without delay...
 
+## DevOps & Deployment 🚀
+
+To make this system production-ready and scalable, the architecture has been containerized and orchestrated using **Kubernetes**, along with a **CI/CD pipeline** via GitHub Actions.
+
+### Continuous Integration & Deployment (CI/CD)
+A GitHub Actions workflow is defined in `.github/workflows/ci.yml`. On every push to the `main` branch, the pipeline automatically:
+1. Checks out the code.
+2. Builds the Docker image.
+3. Pushes the latest image to DockerHub (`<your-dockerhub-username>/dtq-app:latest`).
+
+*To use this, make sure to add `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` to your GitHub Repository Secrets.*
+
+### Kubernetes Orchestration
+The `k8s/` directory contains all declarative manifests required to deploy the system to any Kubernetes cluster.
+
+#### Local Kubernetes Environments
+You can run this project locally using any of the following tools:
+- **Docker Desktop**: The easiest option for Windows/Mac. It comes with a built-in single-node Kubernetes cluster that you can enable in settings.
+- **Minikube**: An industry-standard local Kubernetes cluster. Great for testing how a real multi-node cluster might behave.
+- **Kind (Kubernetes IN Docker)**: Runs local Kubernetes clusters using Docker container "nodes". Very lightweight and often used in CI pipelines.
+
+#### How to Deploy
+1. Ensure your local Kubernetes cluster (like Docker Desktop or Minikube) is running.
+2. Apply the configuration and deployments:
+   ```bash
+   kubectl apply -f k8s/
+   ```
+3. Check the status of your pods:
+   ```bash
+   kubectl get pods
+   ```
+4. Access the API and Flower dashboard via the exposed Services (port `8000` and `5555`).
+
 ---
 
 *Built with [NextWork](https://learn.nextwork.org) - [View this project](https://learn.nextwork.org/projects/39668a32-07c3-4783-876e-d0ba871868b2)*

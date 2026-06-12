@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-high
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker-high
+  template:
+    metadata:
+      labels:
+        app: worker-high
+    spec:
+      containers:
+      - name: worker-high
+        image: mayan05/dtq-app:latest
+        imagePullPolicy: Always
+        command: ["celery", "-A", "app.worker", "worker", "--loglevel=info", "--queues=high"]
+        envFrom:
+        - configMapRef:
+            name: dtq-config
