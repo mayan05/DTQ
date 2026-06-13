@@ -12,6 +12,7 @@ spec:
       labels:
         app: flower
     spec:
+      enableServiceLinks: false
       containers:
       - name: flower
         image: mayan05/dtq-app:latest
