@@ -2,8 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from celery.result import AsyncResult
 
-from app.worker import celery_app
-from app.tasks import process_job
+from .worker import celery_app
+from .tasks import process_job
 
 app = FastAPI(title="Distributed Task Queue", version="1.0.0")
 
