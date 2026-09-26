@@ -84,8 +84,10 @@ To make this system production-ready and scalable, the architecture has been con
 ### Continuous Integration & Deployment (CI/CD)
 A GitHub Actions workflow is defined in `.github/workflows/ci.yml`. On every push to the `main` branch, the pipeline automatically:
 1. Checks out the code.
-2. Builds the Docker image.
-3. Pushes the latest image to DockerHub (`<your-dockerhub-username>/dtq-app:latest`).
+2. Builds the Docker images for both microservices.
+3. Pushes the latest images to DockerHub:
+   - `<your-dockerhub-username>/dtq-job-service:latest`
+   - `<your-dockerhub-username>/dtq-processing-service:latest`
 
 *To use this, make sure to add `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` to your GitHub Repository Secrets.*
 
