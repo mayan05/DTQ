@@ -27,11 +27,20 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Job Service Docker Image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./services/job_service
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/dtq-app:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/dtq-job-service:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and Push Processing Service Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/processing_service
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/dtq-processing-service:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
