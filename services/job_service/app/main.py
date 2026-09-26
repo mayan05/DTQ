@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from .models import *
 import redis
 import json
 import uuid
@@ -16,25 +16,6 @@ def get_db():
     conn.execute('''CREATE TABLE IF NOT EXISTS jobs 
                     (id TEXT PRIMARY KEY, status TEXT, priority TEXT, payload TEXT, result TEXT)''')
     return conn
-
-class JobRequest(BaseModel):
-    payload: str
-    delay_seconds: int = 5
-    priority: str = "default"
-
-class JobResponse(BaseModel):
-    job_id: str
-    status: str
-    priority: str
-
-class JobStatusResponse(BaseModel):
-    job_id: str
-    status: str
-    result: str | None = None
-
-class JobUpdate(BaseModel):
-    status: str
-    result: str | None = None
 
 @app.post("/jobs", status_code=202, response_model=JobResponse)
 def submit_job(request: JobRequest):
