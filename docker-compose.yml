@@ -9,56 +9,39 @@ services:
       timeout: 5s
       retries: 3
 
-  api:
-    build: .
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+  job-service:
+    build: ./services/job_service
     ports:
       - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       redis:
         condition: service_healthy
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
 
-  worker:
-    build: .
-    command: celery -A app.worker worker --loglevel=info --queues=default,low
+  processing-service:
+    build: ./services/processing_service
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - JOB_SERVICE_URL=http://job-service:8000
     depends_on:
+      job-service:
+        condition: service_started
       redis:
         condition: service_healthy
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
 
-  worker-high:
-    build: .
-    command: celery -A app.worker worker --loglevel=info --queues=high
+  # Dedicated high-priority worker 
+  processing-service-high:
+    build: ./services/processing_service
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - JOB_SERVICE_URL=http://job-service:8000
+      # Override queues to ONLY listen to high priority
+      - QUEUE_HIGH=queue:high
+      - QUEUE_DEFAULT=queue:high
+      - QUEUE_LOW=queue:high
     depends_on:
+      job-service:
+        condition: service_started
       redis:
         condition: service_healthy
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
-
-  beat:
-    build: .
-    command: celery -A app.worker beat --loglevel=info --schedule=/tmp/celerybeat-schedule
-    depends_on:
-      redis:
-        condition: service_healthy
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
-
-  flower:
-    build: .
-    command: celery -A app.worker flower --port=5555
-    ports:
-      - "5555:5555"
-    depends_on:
-      redis:
-        condition: service_healthy
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
