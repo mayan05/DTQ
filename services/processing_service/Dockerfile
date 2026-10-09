@@ -6,4 +6,4 @@ COPY . .
 RUN uv sync --frozen --no-cache || uv sync
 
 ENV PATH="/app/.venv/bin:$PATH"
-CMD ["uv", "run", "app.worker"]
+CMD ["python", "-m", "app.worker"]
