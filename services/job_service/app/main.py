@@ -1,3 +1,4 @@
+from fastapi import status
 from fastapi import FastAPI, HTTPException
 from .models import *
 import redis
@@ -80,3 +81,7 @@ def update_job_status(job_id: str, update: JobUpdate):
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+@app.get("/")
+def home():
+    return {"status" : "UP AND RUNNNNINGGGG!!!!"}
