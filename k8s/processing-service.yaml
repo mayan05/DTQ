@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: processing-service
+  labels:
+    app: processing-service
 spec:
   replicas: 2
   selector:
@@ -14,18 +16,33 @@ spec:
     spec:
       containers:
       - name: processing-service
-        image: processing-service:latest
-        imagePullPolicy: Never
+        image: dtq-processing-service:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: REDIS_URL
           value: "redis://redis:6379/0"
         - name: JOB_SERVICE_URL
           value: "http://job-service:8000"
+        - name: QUEUES
+          value: "queue:default"
+        - name: MAX_RETRIES
+          value: "3"
+        - name: BACKOFF_BASE
+          value: "1.5"
+        resources:
+          requests:
+            cpu: 150m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: processing-service-high
+  labels:
+    app: processing-service-high
 spec:
   replicas: 1
   selector:
@@ -38,16 +55,23 @@ spec:
     spec:
       containers:
       - name: processing-service-high
-        image: processing-service:latest
-        imagePullPolicy: Never
+        image: dtq-processing-service:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: REDIS_URL
           value: "redis://redis:6379/0"
         - name: JOB_SERVICE_URL
           value: "http://job-service:8000"
-        - name: QUEUE_HIGH
+        - name: QUEUES
           value: "queue:high"
-        - name: QUEUE_DEFAULT
-          value: "queue:high"
-        - name: QUEUE_LOW
-          value: "queue:high"
+        - name: MAX_RETRIES
+          value: "3"
+        - name: BACKOFF_BASE
+          value: "1.5"
+        resources:
+          requests:
+            cpu: 200m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi

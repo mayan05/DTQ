@@ -1,47 +1,66 @@
 services:
   redis:
     image: redis:7.4-alpine
+    container_name: dtq-redis
     ports:
       - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
 
   job-service:
     build: ./services/job_service
+    container_name: dtq-job-service
     ports:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - DATABASE_PATH=/app/data/jobs.db
+    volumes:
+      - job-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
     depends_on:
       redis:
         condition: service_healthy
+    restart: unless-stopped
 
+  # Worker for default priority tasks
   processing-service:
     build: ./services/processing_service
+    container_name: dtq-processing-service-default
     environment:
       - REDIS_URL=redis://redis:6379/0
       - JOB_SERVICE_URL=http://job-service:8000
+      - QUEUES=queue:default
+      - MAX_RETRIES=3
+      - BACKOFF_BASE=1.5
     depends_on:
-      job-service:
-        condition: service_started
       redis:
         condition: service_healthy
+    restart: unless-stopped
 
-  # Dedicated high-priority worker 
+  # Dedicated VIP worker node for high priority queue
   processing-service-high:
     build: ./services/processing_service
+    container_name: dtq-processing-service-high
     environment:
       - REDIS_URL=redis://redis:6379/0
       - JOB_SERVICE_URL=http://job-service:8000
-      # Override queues to ONLY listen to high priority
-      - QUEUE_HIGH=queue:high
-      - QUEUE_DEFAULT=queue:high
-      - QUEUE_LOW=queue:high
+      - QUEUES=queue:high
+      - MAX_RETRIES=3
+      - BACKOFF_BASE=1.5
     depends_on:
-      job-service:
-        condition: service_started
       redis:
         condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  job-data:

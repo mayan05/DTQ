@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: job-service
+  labels:
+    app: job-service
 spec:
   replicas: 2
   selector:
@@ -14,22 +16,54 @@ spec:
     spec:
       containers:
       - name: job-service
-        image: job-service:latest
-        imagePullPolicy: Never
+        image: dtq-job-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000
         env:
         - name: REDIS_URL
           value: "redis://redis:6379/0"
+        - name: DATABASE_PATH
+          value: "/app/data/jobs.db"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+        volumeMounts:
+        - name: job-data
+          mountPath: /app/data
+      volumes:
+      - name: job-data
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: job-service
+  labels:
+    app: job-service
 spec:
   type: LoadBalancer
   ports:
   - port: 8000
     targetPort: 8000
+    protocol: TCP
   selector:
     app: job-service
